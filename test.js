@@ -46,8 +46,12 @@ class PDA {
         Node.push = push;
     }
 
-    addEmptyCharacter(stringInput) {
-        return 'e' + stringInput.split('').join(' ') + 'e';
+    addEmptyCharacter(stringInput, isPalindrome) {
+        if (isPalindrome) {
+            const middleIndex = Math.floor(stringInput.length / 2);
+            return 'e' + stringInput.slice(0, middleIndex) + " " + stringInput.slice(middleIndex) + 'e';
+        }
+        return 'e' + stringInput + 'e';
     }
 
     validateResult(stringInput, autoReject) {
@@ -58,13 +62,12 @@ class PDA {
         }
     }
 
-    validateInput(stringInput) {
-        const string = this.addEmptyCharacter(stringInput);
+    validateInput(stringInput, isPalindrome) {
+        const string = this.addEmptyCharacter(stringInput, isPalindrome);
         let currentState = this.states["Q0"]
         let autoReject = false;
-        for (const char of string) {
-            
-
+        for (const char of string)  {
+           
             let toPop = currentState.pop?.[char] ?? null;
             let toPush = currentState.push?.[char] ?? null;
             let stackFront = this.stack[this.stack.length - 1] ?? null;
@@ -89,7 +92,7 @@ class PDA {
 
             let traverseLocation = currentState.input?.[char] ?? null;
             
-            if (traverseLocation !== null){
+            if (traverseLocation !== null){    
                 currentState = this.states[traverseLocation]
             }
             
@@ -234,16 +237,115 @@ const rejectedTestCases = [
 
     // Execute accepted test cases
     acceptedTestCases.forEach(testCase => {
-        PDAInstance.validateInput(testCase);
+        PDAInstance.validateInput(testCase, false);
     });
 
     console.log("\n\n\n\n\n REJECTED Input")
 
     // Execute rejected test cases
     rejectedTestCases.forEach(testCase => {
-        PDAInstance.validateInput(testCase);
+        PDAInstance.validateInput(testCase, false);
     });
 }
 
-Zero_n_One_n()
+function even_palindrome() {
+    const PDAInstance = new PDA();
 
+const Q0 = new Node("Q0");
+const Q1 = new Node("Q1");
+const Q2 = new Node("Q2");
+const Q3 = new Node("Q3");
+
+// Add States to PDA
+PDAInstance.addState(Q0.stateName, Q0);
+PDAInstance.addState(Q1.stateName, Q1);
+PDAInstance.addState(Q2.stateName, Q2);
+PDAInstance.addState(Q3.stateName, Q3);
+
+
+PDAInstance.addStateCondition("Q0", {"e": "Q1"}, null, {"e": "Z0"});
+
+
+PDAInstance.addStateCondition(
+    "Q1", 
+    // To traverse
+    {
+        "a": "Q1",
+        "b": "Q1",
+        " ": "Q2"
+    },
+    // Pop
+    null,
+    // Push
+    {
+        "a": "a",
+        "b": "b"
+    }
+);
+
+PDAInstance.addStateCondition(
+    "Q2", 
+    // To traverse
+    {
+        "e": "Q3",
+        "a": "Q2",
+        "b": "Q2",
+    },
+    // Pop
+    {
+        "e": "Z0",
+        "a": "a",
+        "b": "b"
+    },
+    // Push
+    null
+);
+
+PDAInstance.addStateCondition(
+    "Q3", 
+    // To traverse
+    {
+        "e": "Q3",
+    },
+    // Pop
+    {
+        "e": "Z0",
+    },
+    // Push
+    null
+);
+
+
+const acceptedTestCases = [
+  "aa", "bb", "abba", "bbbb", "baab", "aabbaa", "bbaabb", "bbbbaabbbb", "aaaaabbaaaaa"
+];
+
+
+// Rejected Test Cases (Unbalanced or invalid)
+const rejectedTestCases = [
+    "aabb", "abab", "baba", "ab", "ba", "aaabbb", "bbbbaaaa", "abababab"
+];
+
+
+    console.log("Accepted Input")
+
+    // Execute accepted test cases
+    acceptedTestCases.forEach(testCase => {
+        PDAInstance.validateInput(testCase, true);
+    });
+
+    console.log("\n\n\n\n\nREJECTED Input")
+
+    // Execute rejected test cases
+    rejectedTestCases.forEach(testCase => {
+        PDAInstance.validateInput(testCase, true);
+    });
+
+}
+
+Zero_n_One_n()
+console.log("\n\n\n")
+even_palindrome()
+
+export {Node};
+export {PDA};
