@@ -1,15 +1,9 @@
 class Node {
     constructor(name) {
         this.stateName = name;
-        this.input = null;
-        this.pop = null;
-        this.push = null;
-        this.ifFirstTrue = null;
-
-        this.SecondInput = null;
-        this.SecondPop = null;
-        this.SecondPush = null;
-        this.ifSecondTrue = null;
+        this.input = {}; // Input: State To Traverse
+        this.pop = {}; // Input: to pop
+        this.push = {}; // Input: to push
     }
 }
 
@@ -32,15 +26,9 @@ class PDA {
             console.log("------------->");
             console.log(`State Name: ${state.stateName}`);
             console.log("-------------=");
-            console.log(`Input: ${state.input}`);
-            console.log(`Pop: ${state.pop}`);
-            console.log(`Push: ${state.push}`);
-            console.log(`First State If true: ${state.ifFirstTrue}`);
-            console.log("-------------=");
-            console.log(`Second Input: ${state.SecondInput}`);
-            console.log(`Second Pop: ${state.SecondPop}`);
-            console.log(`Second Push: ${state.SecondPush}`);
-            console.log(`Second State if True: ${state.ifSecondTrue}`);
+            console.log(`Input: ${JSON.stringify(state.input)}`);
+            console.log(`Pop: ${JSON.stringify(state.pop)}`);
+            console.log(`Push: ${JSON.stringify(state.push)}`);
             console.log("------------->");
             console.log("\n");
         }
@@ -50,89 +38,77 @@ class PDA {
         this.states[stateName] = node
     }
 
-    addStateCondition(stateName, input, pop, push, moveTo ,isFirst){
+    addStateCondition(stateName, input, pop, push){
         const Node = this.states[stateName];
-        if (isFirst) {
-            Node.input = input;
-            Node.pop = pop;
-            Node.push = push;
-            Node.ifFirstTrue = moveTo;
-        } else {
-            Node.SecondInput = input;
-            Node.SecondPop = pop;
-            Node.SecondPush = push;
-            Node.ifSecondTrue = moveTo;
-        }
+
+        Node.input = input;
+        Node.pop = pop;
+        Node.push = push;
     }
 
-    checkResult(fail, stringInput) {
-        if (this.stack.length === 0 && !fail) {
+    addEmptyCharacter(stringInput) {
+        return 'e' + stringInput.split('').join(' ') + 'e';
+    }
+
+    validateResult(stringInput, autoReject) {
+        if (this.stack.length === 0 && !autoReject) {
             console.log(`String = "${stringInput}" Reaches Final State (Accepted)`)
         } else {
             console.log(`String = "${stringInput}" Failed To Reach Final State With Stack Not Empty (REJECTED)`)
         }
-        this.reset()
-    }
-
-    reset() {
-        this.stack = this.stack = []
     }
 
     validateInput(stringInput) {
-        let string =  stringInput.padStart(stringInput.length + 1, ' ').padEnd(stringInput.length + 2, ' ');
-        let head = this.states["Q0"]
-        let fail = false;
-
+        const string = this.addEmptyCharacter(stringInput);
+        let currentState = this.states["Q0"]
+        let autoReject = false;
         for (const char of string) {
-            if (char === head.input) {
-                if (this.stack && head.pop != null ) { 
-                    if (!(this.stack[this.stack.length - 1] == head.pop)) {
-                        fail = true // if the top of the stack is not same as the pop
-                        break;
-                    }
-                    this.stack.pop();
-                }
+            
 
-                if (head.push !== null) {
-                    this.stack.push(head.push)
-                }
-                head = this.states[head.ifFirstTrue];
-                
+            let toPop = currentState.pop?.[char] ?? null;
+            let toPush = currentState.push?.[char] ?? null;
+            let stackFront = this.stack[this.stack.length - 1] ?? null;
 
-            } else if (char === head.SecondInput){
-                if (this.stack && head.SecondPop != null) { 
-                    if (!(this.stack[this.stack.length - 1] == head.SecondPop)) {
-                        fail = true // if the top of the stack is not same as the pop
-                        break;
-                    }
-                    this.stack.pop();  
-                }
-
-                
-                if (head.SecondPush !== null) {
-                    this.stack.push(head.SecondPush)
-                }
-                head = this.states[head.ifSecondTrue];
-                
-            } else {
-                fail = true // if char has nowhere to go, it is always going to fail
+            // Pop
+            if (stackFront !== null && toPop !== null && stackFront === toPop) {
+                this.stack.pop();
+               
+            } else if (stackFront === null && toPop !== null) {
+                autoReject = true;
+                break;
+            } else if (stackFront !== null && toPop !== null && stackFront !== toPop) {
+                autoReject = true;
                 break;
             }
-            
-        };
 
-        this.checkResult(fail, stringInput)
+            // Push
+            if (toPush !== null) {
+                this.stack.push(toPush);
+                
+            }
+
+            let traverseLocation = currentState.input?.[char] ?? null;
+            
+            if (traverseLocation !== null){
+                currentState = this.states[traverseLocation]
+            }
+            
+        }
+
+        this.validateResult(stringInput, autoReject);
     }
+
+    
 }
 
-// Create PDA instance
+function Zero_n_One_n() {
+    // Create PDA instance
 const PDAInstance = new PDA();
 
-// Create States
 const Q0 = new Node("Q0");
 const Q1 = new Node("Q1");
 const Q2 = new Node("Q2");
-const Q3 = new Node("Q3")
+const Q3 = new Node("Q3");
 
 // Add States to PDA
 PDAInstance.addState(Q0.stateName, Q0);
@@ -140,25 +116,60 @@ PDAInstance.addState(Q1.stateName, Q1);
 PDAInstance.addState(Q2.stateName, Q2);
 PDAInstance.addState(Q3.stateName, Q3);
 
-// Add State Conditions for Transitions
 
-// Makes Q0 (initial state) where it adds Z0
-PDAInstance.addStateCondition("Q0", " ", null, "Z0", "Q1", true);
-
-PDAInstance.addStateCondition("Q1", "0", null, "0", "Q1", true); // Push '0' for input '0'
-PDAInstance.addStateCondition("Q1", "1", "0", null, "Q2", false); // Pop '0' for input '1', transition to Q2
-
-PDAInstance.addStateCondition("Q2", "1", "0", null, "Q2", true); // Pop '0' for input '1' in Q2
-PDAInstance.addStateCondition("Q2", " ", "Z0", null, "Q3", false); // Go to Q3 if empty
-
-// Make Q3 (final state) where it get rids of Z0 Just incase
-PDAInstance.addStateCondition("Q3", " ", "Z0", null, "Q3", true);
+PDAInstance.addStateCondition("Q0", {"e": "Q1"}, null, {"e": "Z0"});
 
 
-// Print the States Map
-//PDAInstance.printStateInfos();
+PDAInstance.addStateCondition(
+    "Q1", 
+    // To traverse
+    {
+        "0": "Q1",
+        "1": "Q2",
+    },
+    // Pop
+    {
+        "0": null,
+        "1": "0"
+    },
+    // Push
+    {
+        "0": "0",
+        "1": null
+    }
+);
 
-// Accepted Test Cases (Balanced strings)
+PDAInstance.addStateCondition(
+    "Q2", 
+    // To traverse
+    {
+        "e": "Q3",
+        "1": "Q2",
+    },
+    // Pop
+    {
+        "e": "Z0",
+        "1": "0"
+    },
+    // Push
+    null
+);
+
+PDAInstance.addStateCondition(
+    "Q3", 
+    // To traverse
+    {
+        "e": "Q3",
+    },
+    // Pop
+    {
+        "e": "Z0",
+    },
+    // Push
+    null
+);
+
+
 const acceptedTestCases = [
     "0011",           // Should be accepted (balanced)
     "000111",         // Should be accepted (balanced)
@@ -219,16 +230,20 @@ const rejectedTestCases = [
 ];
 
 
-console.log("Accepted Input")
+    console.log("Accepted Input")
 
-// Execute accepted test cases
-acceptedTestCases.forEach(testCase => {
-    PDAInstance.validateInput(testCase);
-});
+    // Execute accepted test cases
+    acceptedTestCases.forEach(testCase => {
+        PDAInstance.validateInput(testCase);
+    });
 
-console.log("\n\n\n\n\n REJECTED Input")
+    console.log("\n\n\n\n\n REJECTED Input")
 
-// Execute rejected test cases
-rejectedTestCases.forEach(testCase => {
-    PDAInstance.validateInput(testCase);
-});
+    // Execute rejected test cases
+    rejectedTestCases.forEach(testCase => {
+        PDAInstance.validateInput(testCase);
+    });
+}
+
+Zero_n_One_n()
+
