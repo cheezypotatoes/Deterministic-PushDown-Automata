@@ -60,6 +60,44 @@ class PDA {
         } else {
             console.log(`String = "${stringInput}" Failed To Reach Final State With Stack Not Empty (REJECTED)`)
         }
+
+        this.stack = []
+    }
+
+    validatePopper(stackFront, toPop) {
+        // If array (if need to pop twice)
+        if (Array.isArray(toPop)) {
+            for (let item of toPop) {
+                if (!this.validatePopper(stackFront, item)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+
+        // Pop
+        if (stackFront !== null && toPop !== null && stackFront === toPop) {
+            this.stack.pop();
+        } else if (stackFront === null && toPop !== null) {
+            return true;
+        } else if (stackFront !== null && toPop !== null && stackFront !== toPop) {
+            return true;
+        }
+    }
+
+    validatePusher(toPush) {
+        if (Array.isArray(toPush)) {
+            // Push each element in the array
+            for (let item of toPush) {
+                if (item !== null) {
+                    this.stack.push(item);
+                }
+            }
+        } else if (toPush !== null) {
+            // Push single non-null value
+            this.stack.push(toPush);
+        }
     }
 
     validateInput(stringInput, isPalindrome) {
@@ -71,24 +109,13 @@ class PDA {
             let toPop = currentState.pop?.[char] ?? null;
             let toPush = currentState.push?.[char] ?? null;
             let stackFront = this.stack[this.stack.length - 1] ?? null;
-
+            
             // Pop
-            if (stackFront !== null && toPop !== null && stackFront === toPop) {
-                this.stack.pop();
-               
-            } else if (stackFront === null && toPop !== null) {
-                autoReject = true;
-                break;
-            } else if (stackFront !== null && toPop !== null && stackFront !== toPop) {
-                autoReject = true;
-                break;
-            }
+            autoReject = this.validatePopper(stackFront, toPop)
+            if (autoReject) { break; }
 
             // Push
-            if (toPush !== null) {
-                this.stack.push(toPush);
-                
-            }
+            this.validatePusher(toPush)
 
             let traverseLocation = currentState.input?.[char] ?? null;
             
@@ -99,6 +126,7 @@ class PDA {
         }
 
         this.validateResult(stringInput, autoReject);
+       
     }
 
     
@@ -249,7 +277,7 @@ const rejectedTestCases = [
 }
 
 function even_palindrome() {
-    const PDAInstance = new PDA();
+const PDAInstance = new PDA();
 
 const Q0 = new Node("Q0");
 const Q1 = new Node("Q1");
@@ -343,9 +371,140 @@ const rejectedTestCases = [
 
 }
 
-Zero_n_One_n()
-console.log("\n\n\n")
-even_palindrome()
+function balance_parentheses(){
 
-export {Node};
-export {PDA};
+    // Create PDA instance
+    const PDAInstance = new PDA();
+
+    const Q0 = new Node("Q0");
+    const Q1 = new Node("Q1");
+    const Q2 = new Node("Q2");
+    const Q3 = new Node("Q3");
+
+    // Add States to PDA
+    PDAInstance.addState(Q0.stateName, Q0);
+    PDAInstance.addState(Q1.stateName, Q1);
+    PDAInstance.addState(Q2.stateName, Q2);
+    PDAInstance.addState(Q3.stateName, Q3);
+
+
+    PDAInstance.addStateCondition("Q0", {"e": "Q1"}, null, {"e": "Z0"});
+
+
+    PDAInstance.addStateCondition(
+        "Q1", 
+        // To traverse
+        {
+            "(": "Q1",
+            ")": "Q2",
+        },
+        // Pop
+        {
+            "(": null,
+            ")": "("
+        },
+        // Push
+        {
+            "(": "(",
+            ")": null
+        }
+    );
+
+    PDAInstance.addStateCondition(
+        "Q2", 
+        // To traverse
+        {
+            "e": "Q3",
+            ")": "Q2",
+            "(": "Q1"
+        },
+        // Pop
+        {
+            "e": "Z0",
+            ")": "(",
+            "(": null
+        },
+        // Push
+        {
+            "(": "("
+        }
+    );
+
+    PDAInstance.addStateCondition(
+        "Q3", 
+        // To traverse
+        {
+            "e": "Q3",
+        },
+        // Pop
+        {
+            "e": "Z0",
+        },
+        // Push
+        null
+    );
+
+    const acceptedTestCases = [
+        "()",          // Length 2
+    "(())",        // Length 4
+    "()()",        // Length 4
+    "(()())",      // Length 6
+    "(())()",      // Length 6
+    "()()()",      // Length 6
+    "(()(()))",    // Length 8
+    "(())(())",    // Length 8
+    "()(()())",    // Length 8
+    "(())()()",    // Length 8
+    "()(()()())",  // Length 10
+    "(((())))",    // Length 8
+    "(()())()",    // Length 8
+    "()((()))",    // Length 8
+    "((())())",    // Length 8
+    "(()(()))()",  // Length 10
+    "((()()()))",  // Length 10
+    "(()(()())())",// Length 12
+    "(((()))())",  // Length 10
+    "(((()(()))))" // Length 12
+    ];
+
+
+    // Rejected Test Cases (Unbalanced or invalid)
+    const rejectedTestCases = [
+        "(",           // Length 1 (missing closing parenthesis)
+        ")",           // Length 1 (missing opening parenthesis)
+        "())",         // Length 3 (extra closing parenthesis)
+        "(()",         // Length 3 (missing closing parenthesis)
+        "(()))",       // Length 5 (extra closing parenthesis)
+        "(()()(",      // Length 6 (missing closing parenthesis)
+        "(()(()))(",   // Length 8 (missing closing parenthesis)
+        "())(())",     // Length 6 (misplaced parentheses)
+        "((())",       // Length 5 (missing closing parenthesis)
+        "())(()",      // Length 6 (misplaced parentheses)
+        "(((())())",   // Length 8 (missing closing parenthesis)
+        "(()())(()",   // Length 8 (misplaced parentheses)
+        "()(()))",     // Length 7 (extra closing parenthesis)
+        "())",         // Length 3 (extra closing parenthesis)
+        "(()())())",   // Length 8 (extra closing parenthesis)
+        "((())())(",   // Length 8 (missing closing parenthesis)
+        "(((()()())",  // Length 9 (missing closing parenthesis)
+        "(()(()())",   // Length 8 (missing closing parenthesis)
+        "((((()))))",  // Length 10 (misplaced parentheses, extra closing one)
+        "((())())(",   // Length 8 (missing closing parenthesis)
+        "(((((()))))", // Length 12 (misplaced parentheses, extra closing one)
+    ];
+
+
+    console.log("Accepted Input")
+
+    // Execute accepted test cases
+    acceptedTestCases.forEach(testCase => {
+        PDAInstance.validateInput(testCase, false);
+    });
+
+    console.log("\n\n\n\n\n REJECTED Input")
+
+    // Execute rejected test cases
+    rejectedTestCases.forEach(testCase => {
+        PDAInstance.validateInput(testCase, false);
+    });
+}
