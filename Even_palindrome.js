@@ -1,5 +1,7 @@
 import { PDA, Node } from "./PushDownAutomata.js";
 
+// Accepts palindrome string (The true boolean is just a way for my code to recognize that its dealing with palindrome)
+
 const PDAInstance = new PDA();
 
 const Q0 = new Node("Q0");

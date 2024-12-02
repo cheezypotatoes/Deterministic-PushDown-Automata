@@ -1,5 +1,6 @@
 import { PDA, Node } from "./PushDownAutomata.js";
 
+// Accept any string where there's an equal amount of "0" and "1"
 
 // Create PDA instance
 const PDAInstance = new PDA();

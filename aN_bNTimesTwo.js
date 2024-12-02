@@ -1,5 +1,6 @@
 import { PDA, Node } from "./PushDownAutomata.js";
 
+// Accepts any string where "a" followed by "b" and "b" is twice as many as "a"
 
 // Create PDA instance
 const PDAInstance = new PDA();

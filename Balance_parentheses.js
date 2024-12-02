@@ -1,5 +1,7 @@
 import { PDA, Node } from "./PushDownAutomata.js";
 
+// Accepts any string where it has balance number of "(" and ")"
+
 // Create PDA instance
 const PDAInstance = new PDA();
 
