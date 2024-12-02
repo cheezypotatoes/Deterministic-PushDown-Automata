@@ -72,7 +72,7 @@ PDAInstance.addStateCondition(
 );
 
 const acceptedTestCases = [
-    "()",          // Length 2
+"()",          // Length 2
 "(())",        // Length 4
 "()()",        // Length 4
 "(()())",      // Length 6
