@@ -104,6 +104,12 @@ class PDA {
         const string = this.addEmptyCharacter(stringInput, isPalindrome);
         let currentState = this.states["Q0"]
         let autoReject = false;
+        
+        console.log("Transition Table:");
+        console.log("-------------------------------------------------------------------------");
+        console.log("| Current State  | Input | Action     | Stack State        | Next State |");
+        console.log("-------------------------------------------------------------------------");
+
         for (const char of string)  {
            
             let toPop = currentState.pop?.[char] ?? null;
@@ -119,9 +125,34 @@ class PDA {
 
             let traverseLocation = currentState.input?.[char] ?? null;
             
+            // Determine action
+            let action = "";
+            if (toPop && toPush) {
+                action = `Pop ${toPop}, Push ${toPush}`;
+            } else if (toPop) {
+                action = `Pop ${toPop}`;
+            } else if (toPush) {
+                action = `Push ${toPush}`;
+            } else {
+                action = "No action";
+            }
+
+            // Transition to next state
+            const nextStateName = traverseLocation !== null ? traverseLocation : currentState.stateName;
+
+            // Stack representation
+            const stackRepresentation = `${this.stack[this.stack.length - 1] ?? "Empty"},${this.stack[this.stack.length - 2] ?? ""}`;
+
+
+            // Log transition
+            console.log(`| ${currentState.stateName.padEnd(14)} | ${char.padEnd(5)} | ${action.padEnd(10)} | ${stackRepresentation.padEnd(18)} | ${nextStateName.padEnd(10)} |`);
+            
+
             if (traverseLocation !== null){    
                 currentState = this.states[traverseLocation]
             }
+
+
             
         }
 
